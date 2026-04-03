@@ -250,6 +250,69 @@
   let spawnInterval = null;
   let gameActive = false;
 
+  // --- Sound FX (Web Audio API, no files needed) ---
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let audioCtx;
+  function ensureAudio() {
+    if (!audioCtx) audioCtx = new AudioCtx();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function playPop() {
+    ensureAudio();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(880, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.08);
+    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+    o.start(); o.stop(audioCtx.currentTime + 0.15);
+  }
+
+  function playBuzz() {
+    ensureAudio();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(120, audioCtx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.2);
+    g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+    o.start(); o.stop(audioCtx.currentTime + 0.25);
+  }
+
+  function playFanfare() {
+    ensureAudio();
+    const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'triangle';
+      const t = audioCtx.currentTime + i * 0.15;
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.3, t + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+      o.start(t); o.stop(t + 0.5);
+    });
+    // Final shimmer chord
+    const t2 = audioCtx.currentTime + 0.6;
+    [523, 659, 784, 1047].forEach(freq => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'sine';
+      o.frequency.setValueAtTime(freq, t2);
+      g.gain.setValueAtTime(0.15, t2);
+      g.gain.exponentialRampToValueAtTime(0.01, t2 + 1.0);
+      o.start(t2); o.stop(t2 + 1.0);
+    });
+  }
+
   // Build grid
   const grid = document.getElementById('grid');
   const holes = [];
@@ -343,6 +406,7 @@
     if (hole.letter === needed) {
       // Correct!
       currentIndex++;
+      playPop();
       hole.el.classList.remove('correct');
       void hole.el.offsetWidth;
       hole.el.classList.add('correct');
@@ -355,6 +419,7 @@
       }
     } else {
       // Wrong
+      playBuzz();
       hole.el.classList.remove('wrong');
       void hole.el.offsetWidth;
       hole.el.classList.add('wrong');
@@ -416,6 +481,9 @@
 
     // Hide all letters
     holes.forEach((h, i) => { clearTimeout(h.timeout); hideLetter(i); });
+
+    // Victory fanfare
+    playFanfare();
 
     // Confetti
     for (let i = 0; i < 80; i++) {
