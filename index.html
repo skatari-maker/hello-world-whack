@@ -65,14 +65,31 @@
   }
 
   #lives {
-    font-size: 1.3rem;
-    letter-spacing: 4px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  #lives .heart {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
     transition: all 0.2s;
+  }
+
+  #lives .heart.full {
+    background: #f44;
+    clip-path: path('M9 2C6.5-1 0 0 0 5.5 0 9.5 9 16 9 16s9-6.5 9-10.5C18 0 11.5-1 9 2z');
+    filter: drop-shadow(0 0 4px #f44);
+  }
+
+  #lives .heart.empty {
+    background: #333;
+    clip-path: path('M9 2C6.5-1 0 0 0 5.5 0 9.5 9 16 9 16s9-6.5 9-10.5C18 0 11.5-1 9 2z');
   }
 
   #lives.hit {
     animation: shake 0.3s ease;
-    filter: brightness(2);
   }
 
   #score {
@@ -245,7 +262,7 @@
 <div id="progress"></div>
 <div id="stats">
   <span id="timer">0.00s</span>
-  <span id="lives">❤️ ❤️ ❤️</span>
+  <span id="lives"></span>
   <span id="score">Score: 0</span>
 </div>
 
@@ -355,10 +372,92 @@
     });
   }
 
+  // --- Nintendo-style Background Music ---
+  let bgmPlaying = false;
+  let bgmTimeout = null;
+
+  // A catchy 8-bit loop — think Mario overworld vibes
+  // Notes: [frequency, duration in seconds]
+  const BGM_MELODY = [
+    // Bar 1
+    [659, 0.15], [659, 0.15], [0, 0.15], [659, 0.15],
+    [0, 0.15], [523, 0.15], [659, 0.15], [0, 0.15],
+    // Bar 2
+    [784, 0.15], [0, 0.45], [392, 0.15], [0, 0.45],
+    // Bar 3
+    [523, 0.2], [0, 0.1], [392, 0.2], [0, 0.1],
+    [330, 0.2], [0, 0.1],
+    // Bar 4
+    [440, 0.15], [494, 0.15], [0, 0.1], [466, 0.15],
+    [440, 0.15], [0, 0.1],
+    // Bar 5
+    [392, 0.13], [659, 0.13], [784, 0.13],
+    [880, 0.15], [0, 0.1], [698, 0.15], [784, 0.15],
+    // Bar 6
+    [0, 0.1], [659, 0.15], [0, 0.1],
+    [523, 0.15], [587, 0.15], [494, 0.15],
+    [0, 0.2],
+  ];
+
+  // Bass line that plays underneath
+  const BGM_BASS = [
+    [131, 0.3], [0, 0.3], [131, 0.3], [0, 0.3],
+    [196, 0.3], [0, 0.3], [196, 0.3], [0, 0.3],
+    [165, 0.3], [0, 0.3], [131, 0.3], [0, 0.3],
+    [175, 0.3], [0, 0.3], [196, 0.3], [0, 0.3],
+    [131, 0.3], [0, 0.3], [165, 0.3], [0, 0.3],
+    [196, 0.3], [0, 0.3], [220, 0.3], [0, 0.3],
+  ];
+
+  function playBGMLine(notes, type, gainVal, startTime) {
+    let t = startTime;
+    notes.forEach(([freq, dur]) => {
+      if (freq > 0) {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = type;
+        o.frequency.setValueAtTime(freq, t);
+        g.gain.setValueAtTime(gainVal, t);
+        g.gain.setValueAtTime(gainVal, t + dur * 0.8);
+        g.gain.linearRampToValueAtTime(0, t + dur);
+        o.start(t);
+        o.stop(t + dur);
+      }
+      t += dur;
+    });
+    return t - startTime; // total duration
+  }
+
+  function startBGM() {
+    if (bgmPlaying) return;
+    ensureAudio();
+    bgmPlaying = true;
+
+    function loopBGM() {
+      if (!bgmPlaying) return;
+      const now = audioCtx.currentTime + 0.05;
+      const melodyDur = playBGMLine(BGM_MELODY, 'square', 0.08, now);
+      playBGMLine(BGM_BASS, 'triangle', 0.1, now);
+      const loopDur = melodyDur * 1000;
+      bgmTimeout = setTimeout(loopBGM, loopDur);
+    }
+    loopBGM();
+  }
+
+  function stopBGM() {
+    bgmPlaying = false;
+    clearTimeout(bgmTimeout);
+  }
+
   function updateLivesDisplay() {
-    const full = '❤️ '.repeat(lives).trim();
-    const empty = '🖤 '.repeat(MAX_LIVES - lives).trim();
-    document.getElementById('lives').textContent = (full + ' ' + empty).trim();
+    const el = document.getElementById('lives');
+    el.innerHTML = '';
+    for (let i = 0; i < MAX_LIVES; i++) {
+      const heart = document.createElement('span');
+      heart.className = 'heart ' + (i < lives ? 'full' : 'empty');
+      el.appendChild(heart);
+    }
   }
 
   function updateScoreDisplay() {
@@ -524,6 +623,9 @@
 
     document.getElementById('overlay').classList.add('hidden');
 
+    // Start background music
+    startBGM();
+
     // Clear all holes
     holes.forEach((h, i) => {
       clearTimeout(h.timeout);
@@ -544,6 +646,7 @@
     gameActive = false;
     clearInterval(timerInterval);
     clearInterval(spawnInterval);
+    stopBGM();
 
     playLose();
 
@@ -569,6 +672,7 @@
     gameActive = false;
     clearInterval(timerInterval);
     clearInterval(spawnInterval);
+    stopBGM();
 
     const finalTime = ((Date.now() - startTime) / 1000).toFixed(2);
 
@@ -601,8 +705,9 @@
     }, 1200);
   }
 
-  // Initial progress state
+  // Initial state
   updateProgress();
+  updateLivesDisplay();
 </script>
 
 </body>
