@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hello World Whack-a-Mole</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a1a;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 20px #0ff, 0 0 40px #0ff;
+    color: #0ff;
+    letter-spacing: 4px;
+  }
+
+  /* Progress bar */
+  #progress {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+  }
+
+  #progress span {
+    color: #333;
+    text-shadow: none;
+    transition: all 0.3s ease;
+  }
+
+  #progress span.lit {
+    color: #0f0;
+    text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+  }
+
+  #progress span.next {
+    color: #ff0;
+    text-shadow: 0 0 10px #ff0;
+    animation: pulse 0.6s ease-in-out infinite alternate;
+  }
+
+  /* Timer */
+  #timer {
+    font-size: 1.2rem;
+    color: #888;
+    margin-bottom: 1rem;
+  }
+
+  /* Grid */
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 2rem;
+  }
+
+  .hole {
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, #1a1a2e 60%, #0d0d1a 100%);
+    border: 2px solid #222;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+
+  .hole:hover {
+    border-color: #444;
+  }
+
+  .hole .letter {
+    font-size: 2.5rem;
+    font-weight: bold;
+    opacity: 0;
+    transform: scale(0) translateY(20px);
+    transition: none;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .hole .letter.show {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    animation: popUp 0.2s ease-out;
+    text-shadow: 0 0 15px currentColor;
+  }
+
+  .hole .letter.hide {
+    animation: popDown 0.2s ease-in forwards;
+  }
+
+  .hole.correct {
+    animation: correctFlash 0.4s ease;
+  }
+
+  .hole.wrong {
+    animation: shake 0.3s ease;
+  }
+
+  /* Start / Win screen */
+  #overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 26, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  #overlay.hidden { display: none; }
+
+  #overlay h2 {
+    font-size: 2.5rem;
+    color: #0ff;
+    text-shadow: 0 0 30px #0ff;
+    margin-bottom: 1rem;
+  }
+
+  #overlay .subtitle {
+    font-size: 1.2rem;
+    color: #888;
+    margin-bottom: 2rem;
+  }
+
+  #overlay button {
+    padding: 14px 40px;
+    font-size: 1.2rem;
+    font-family: 'Courier New', monospace;
+    background: transparent;
+    color: #0ff;
+    border: 2px solid #0ff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  #overlay button:hover {
+    background: #0ff;
+    color: #0a0a1a;
+    box-shadow: 0 0 30px #0ff;
+  }
+
+  /* Confetti */
+  .confetti {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    z-index: 200;
+    pointer-events: none;
+    animation: confettiFall linear forwards;
+  }
+
+  /* Particle burst */
+  .particle {
+    position: fixed;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 50;
+  }
+
+  /* Animations */
+  @keyframes pulse {
+    from { opacity: 0.5; }
+    to { opacity: 1; }
+  }
+
+  @keyframes popUp {
+    0% { opacity: 0; transform: scale(0) translateY(20px); }
+    70% { transform: scale(1.2) translateY(-5px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  @keyframes popDown {
+    0% { opacity: 1; transform: scale(1) translateY(0); }
+    100% { opacity: 0; transform: scale(0) translateY(20px); }
+  }
+
+  @keyframes correctFlash {
+    0% { border-color: #222; box-shadow: none; }
+    50% { border-color: #0f0; box-shadow: 0 0 30px #0f0, inset 0 0 20px rgba(0,255,0,0.2); }
+    100% { border-color: #222; box-shadow: none; }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<h1>WHACK-A-LETTER</h1>
+
+<div id="progress"></div>
+<div id="timer">0.00s</div>
+
+<div id="grid"></div>
+
+<!-- Start screen -->
+<div id="overlay">
+  <h2 id="overlayTitle">WHACK-A-LETTER</h2>
+  <div class="subtitle" id="overlaySubtitle">Click the letters in order to spell HELLO WORLD</div>
+  <button id="overlayBtn" onclick="startGame()">START</button>
+</div>
+
+<script>
+  const TARGET = 'HELLOWORLD';
+  const DISPLAY = 'H E L L O   W O R L D';
+  const ALL_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const HOLES_COUNT = 12;
+  const LETTER_SHOW_TIME = 1200;
+  const SPAWN_INTERVAL = 600;
+  const COLORS = ['#0ff', '#f0f', '#ff0', '#0f0', '#f90', '#f44', '#4af', '#af4'];
+
+  let currentIndex = 0;
+  let startTime = 0;
+  let timerInterval = null;
+  let spawnInterval = null;
+  let gameActive = false;
+
+  // Build grid
+  const grid = document.getElementById('grid');
+  const holes = [];
+  for (let i = 0; i < HOLES_COUNT; i++) {
+    const hole = document.createElement('div');
+    hole.className = 'hole';
+    hole.innerHTML = '<span class="letter"></span>';
+    hole.addEventListener('click', () => onHoleClick(i));
+    grid.appendChild(hole);
+    holes.push({ el: hole, letterEl: hole.querySelector('.letter'), active: false, letter: '', timeout: null });
+  }
+
+  // Build progress
+  const progress = document.getElementById('progress');
+  const progressSpans = [];
+  for (const ch of DISPLAY) {
+    const span = document.createElement('span');
+    span.textContent = ch;
+    if (ch === ' ') span.style.width = '12px';
+    progress.appendChild(span);
+    progressSpans.push(span);
+  }
+
+  function updateProgress() {
+    const displayChars = DISPLAY.split('');
+    let targetIdx = 0;
+    for (let i = 0; i < displayChars.length; i++) {
+      if (displayChars[i] === ' ') continue;
+      progressSpans[i].classList.remove('lit', 'next');
+      if (targetIdx < currentIndex) {
+        progressSpans[i].classList.add('lit');
+      } else if (targetIdx === currentIndex) {
+        progressSpans[i].classList.add('next');
+      }
+      targetIdx++;
+    }
+  }
+
+  function getRandomLetter() {
+    // 40% chance to show the next needed letter, rest random
+    if (Math.random() < 0.4 && currentIndex < TARGET.length) {
+      return TARGET[currentIndex];
+    }
+    return ALL_LETTERS[Math.floor(Math.random() * ALL_LETTERS.length)];
+  }
+
+  function spawnLetter() {
+    if (!gameActive) return;
+
+    // Find empty holes
+    const emptyHoles = holes.map((h, i) => ({ ...h, idx: i })).filter(h => !h.active);
+    if (emptyHoles.length === 0) return;
+
+    const pick = emptyHoles[Math.floor(Math.random() * emptyHoles.length)];
+    const idx = pick.idx;
+    const hole = holes[idx];
+    const letter = getRandomLetter();
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+    hole.active = true;
+    hole.letter = letter;
+    hole.letterEl.textContent = letter;
+    hole.letterEl.style.color = color;
+    hole.letterEl.classList.remove('hide');
+    hole.letterEl.classList.add('show');
+
+    clearTimeout(hole.timeout);
+    hole.timeout = setTimeout(() => {
+      hideLetter(idx);
+    }, LETTER_SHOW_TIME);
+  }
+
+  function hideLetter(idx) {
+    const hole = holes[idx];
+    if (!hole.active) return;
+    hole.letterEl.classList.remove('show');
+    hole.letterEl.classList.add('hide');
+    setTimeout(() => {
+      hole.active = false;
+      hole.letter = '';
+      hole.letterEl.classList.remove('hide');
+    }, 200);
+  }
+
+  function onHoleClick(idx) {
+    if (!gameActive) return;
+    const hole = holes[idx];
+    if (!hole.active) return;
+
+    const needed = TARGET[currentIndex];
+    if (hole.letter === needed) {
+      // Correct!
+      currentIndex++;
+      hole.el.classList.remove('correct');
+      void hole.el.offsetWidth;
+      hole.el.classList.add('correct');
+      spawnParticles(hole.el);
+      hideLetter(idx);
+      updateProgress();
+
+      if (currentIndex >= TARGET.length) {
+        winGame();
+      }
+    } else {
+      // Wrong
+      hole.el.classList.remove('wrong');
+      void hole.el.offsetWidth;
+      hole.el.classList.add('wrong');
+    }
+  }
+
+  function spawnParticles(el) {
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    for (let i = 0; i < 12; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const angle = (Math.PI * 2 * i) / 12;
+      const dist = 40 + Math.random() * 40;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      p.style.cssText = `left:${cx}px;top:${cy}px;background:${color};box-shadow:0 0 6px ${color};transition:all 0.5s ease-out;`;
+      document.body.appendChild(p);
+      requestAnimationFrame(() => {
+        p.style.transform = `translate(${dx}px, ${dy}px)`;
+        p.style.opacity = '0';
+      });
+      setTimeout(() => p.remove(), 500);
+    }
+  }
+
+  function startGame() {
+    currentIndex = 0;
+    gameActive = true;
+    startTime = Date.now();
+    updateProgress();
+
+    document.getElementById('overlay').classList.add('hidden');
+
+    // Clear all holes
+    holes.forEach((h, i) => {
+      clearTimeout(h.timeout);
+      h.active = false;
+      h.letter = '';
+      h.letterEl.classList.remove('show', 'hide');
+    });
+
+    timerInterval = setInterval(() => {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+      document.getElementById('timer').textContent = elapsed + 's';
+    }, 50);
+
+    spawnInterval = setInterval(spawnLetter, SPAWN_INTERVAL);
+  }
+
+  function winGame() {
+    gameActive = false;
+    clearInterval(timerInterval);
+    clearInterval(spawnInterval);
+
+    const finalTime = ((Date.now() - startTime) / 1000).toFixed(2);
+
+    // Hide all letters
+    holes.forEach((h, i) => { clearTimeout(h.timeout); hideLetter(i); });
+
+    // Confetti
+    for (let i = 0; i < 80; i++) {
+      setTimeout(() => {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+        c.style.cssText = `left:${Math.random()*100}vw;top:-10px;background:${color};box-shadow:0 0 4px ${color};animation-duration:${1.5+Math.random()*2}s;`;
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 4000);
+      }, i * 30);
+    }
+
+    // Show win screen after a beat
+    setTimeout(() => {
+      document.getElementById('overlayTitle').textContent = 'HELLO WORLD!';
+      document.getElementById('overlaySubtitle').textContent = `Completed in ${finalTime}s`;
+      document.getElementById('overlayBtn').textContent = 'PLAY AGAIN';
+      document.getElementById('overlay').classList.remove('hidden');
+    }, 1200);
+  }
+
+  // Initial progress state
+  updateProgress();
+</script>
+
+</body>
+</html>
