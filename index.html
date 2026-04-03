@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>JWX Whack-a-Letter</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -575,8 +576,8 @@
     function loopBGM() {
       if (!bgmPlaying) return;
       const now = audioCtx.currentTime + 0.05;
-      const melodyDur = playBGMLine(BGM_MELODY, 'square', 0.06, now);
-      playBGMLine(BGM_BASS, 'triangle', 0.09, now);
+      const melodyDur = playBGMLine(BGM_MELODY, 'square', 0.12, now);
+      playBGMLine(BGM_BASS, 'triangle', 0.14, now);
       playHiHat(now, melodyDur);
       bgmTimeout = setTimeout(loopBGM, melodyDur * 1000);
     }
