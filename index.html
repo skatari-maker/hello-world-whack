@@ -3,14 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hello World Whack-a-Mole</title>
+<title>JWX Whack-a-Letter</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700;800;900&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
+  :root {
+    --jwx-red: #ed0040;
+    --jwx-teal: #143048;
+    --jwx-dark: #0b1a28;
+    --jwx-light: #e8edf1;
+    --jwx-pink: #D01884;
+  }
+
   body {
-    background: #0a0a1a;
+    background: var(--jwx-dark);
     color: #fff;
-    font-family: 'Courier New', monospace;
+    font-family: 'Space Grotesk', sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -21,11 +30,16 @@
   }
 
   h1 {
-    font-size: 2rem;
+    font-size: 2.2rem;
+    font-weight: 900;
     margin-bottom: 1rem;
-    text-shadow: 0 0 20px #0ff, 0 0 40px #0ff;
-    color: #0ff;
-    letter-spacing: 4px;
+    color: var(--jwx-red);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+  }
+
+  h1 .jwx {
+    color: #fff;
   }
 
   /* Progress bar */
@@ -34,23 +48,24 @@
     gap: 8px;
     margin-bottom: 1.5rem;
     font-size: 1.6rem;
+    font-weight: 700;
     letter-spacing: 2px;
   }
 
   #progress span {
-    color: #333;
+    color: #2a3a48;
     text-shadow: none;
     transition: all 0.3s ease;
   }
 
   #progress span.lit {
-    color: #0f0;
-    text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+    color: var(--jwx-red);
+    text-shadow: 0 0 10px rgba(237, 0, 64, 0.6);
   }
 
   #progress span.next {
-    color: #ff0;
-    text-shadow: 0 0 10px #ff0;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
     animation: pulse 0.6s ease-in-out infinite alternate;
   }
 
@@ -59,8 +74,9 @@
     display: flex;
     gap: 2rem;
     margin-bottom: 1.2rem;
-    font-size: 1.2rem;
-    color: #888;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #5a7a90;
     align-items: center;
   }
 
@@ -78,13 +94,13 @@
   }
 
   #lives .heart.full {
-    background: #f44;
+    background: var(--jwx-red);
     clip-path: path('M9 2C6.5-1 0 0 0 5.5 0 9.5 9 16 9 16s9-6.5 9-10.5C18 0 11.5-1 9 2z');
-    filter: drop-shadow(0 0 4px #f44);
+    filter: drop-shadow(0 0 4px var(--jwx-red));
   }
 
   #lives .heart.empty {
-    background: #333;
+    background: #1e3040;
     clip-path: path('M9 2C6.5-1 0 0 0 5.5 0 9.5 9 16 9 16s9-6.5 9-10.5C18 0 11.5-1 9 2z');
   }
 
@@ -93,8 +109,7 @@
   }
 
   #score {
-    color: #0ff;
-    text-shadow: 0 0 8px rgba(0,255,255,0.3);
+    color: var(--jwx-red);
   }
 
   /* Grid */
@@ -109,8 +124,8 @@
   .hole {
     width: 120px;
     height: 90px;
-    background: #111;
-    border: 2px solid #2a2a3a;
+    background: #0e1e2c;
+    border: 2px solid #1a3048;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -130,14 +145,14 @@
       0deg,
       transparent,
       transparent 2px,
-      rgba(255,255,255,0.015) 2px,
-      rgba(255,255,255,0.015) 4px
+      rgba(255,255,255,0.01) 2px,
+      rgba(255,255,255,0.01) 4px
     );
     pointer-events: none;
     z-index: 2;
   }
 
-  /* Bottom control bar */
+  /* Bottom control bar gradient */
   .hole::after {
     content: '';
     position: absolute;
@@ -145,7 +160,7 @@
     left: 0;
     right: 0;
     height: 16px;
-    background: linear-gradient(to top, #0a0a12, transparent);
+    background: linear-gradient(to top, #080e16, transparent);
     pointer-events: none;
     z-index: 3;
   }
@@ -168,7 +183,7 @@
     height: 0;
     border-style: solid;
     border-width: 3px 0 3px 6px;
-    border-color: transparent transparent transparent #555;
+    border-color: transparent transparent transparent #1e3040;
     flex-shrink: 0;
     transition: border-color 0.2s;
   }
@@ -176,7 +191,7 @@
   .hole .progress-bar {
     flex: 1;
     height: 3px;
-    background: #222;
+    background: #112030;
     border-radius: 2px;
     overflow: hidden;
     position: relative;
@@ -185,31 +200,33 @@
   .hole .progress-fill {
     height: 100%;
     width: 0%;
-    background: #f44;
+    background: var(--jwx-red);
     border-radius: 2px;
     transition: width linear;
   }
 
   .hole .time-label {
     font-size: 7px;
-    color: #555;
+    color: #2a4a5a;
     flex-shrink: 0;
+    font-family: 'Space Grotesk', sans-serif;
   }
 
   .hole:hover {
-    border-color: #444;
+    border-color: #2a4a60;
   }
 
   /* Letter inside the "screen" */
   .hole .letter {
     font-size: 2.2rem;
-    font-weight: bold;
+    font-weight: 800;
     opacity: 0;
     transform: scale(0);
     transition: none;
     pointer-events: none;
     position: absolute;
     z-index: 1;
+    font-family: 'Space Grotesk', sans-serif;
   }
 
   .hole .letter.show {
@@ -225,13 +242,13 @@
 
   /* Active state — screen "on" */
   .hole.active-screen {
-    border-color: #333;
-    box-shadow: inset 0 0 20px rgba(100, 100, 255, 0.05), 0 0 8px rgba(100, 100, 255, 0.1);
-    background: radial-gradient(ellipse at center, #151528 0%, #0d0d18 100%);
+    border-color: #1e4058;
+    box-shadow: inset 0 0 20px rgba(20, 48, 72, 0.3), 0 0 12px rgba(237, 0, 64, 0.1);
+    background: radial-gradient(ellipse at center, #122438 0%, #0b1820 100%);
   }
 
   .hole.active-screen .play-icon {
-    border-color: transparent transparent transparent #f44;
+    border-color: transparent transparent transparent var(--jwx-red);
   }
 
   .hole.correct-hit {
@@ -246,7 +263,7 @@
   #overlay {
     position: fixed;
     inset: 0;
-    background: rgba(10, 10, 26, 0.95);
+    background: rgba(11, 26, 40, 0.96);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -258,14 +275,16 @@
 
   #overlay h2 {
     font-size: 2.5rem;
-    color: #0ff;
-    text-shadow: 0 0 30px #0ff;
+    font-weight: 900;
+    color: var(--jwx-red);
     margin-bottom: 1rem;
+    letter-spacing: 3px;
   }
 
   #overlay .subtitle {
-    font-size: 1.2rem;
-    color: #888;
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: #5a7a90;
     margin-bottom: 2rem;
     text-align: center;
     line-height: 1.6;
@@ -273,11 +292,12 @@
 
   #overlay button {
     padding: 14px 40px;
-    font-size: 1.2rem;
-    font-family: 'Courier New', monospace;
-    background: transparent;
-    color: #0ff;
-    border: 2px solid #0ff;
+    font-size: 1.1rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    background: var(--jwx-red);
+    color: #fff;
+    border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
@@ -286,9 +306,9 @@
   }
 
   #overlay button:hover {
-    background: #0ff;
-    color: #0a0a1a;
-    box-shadow: 0 0 30px #0ff;
+    background: #ff1a5c;
+    box-shadow: 0 0 30px rgba(237, 0, 64, 0.4);
+    transform: translateY(-1px);
   }
 
   /* Confetti */
@@ -332,9 +352,9 @@
   }
 
   @keyframes correctFlash {
-    0% { border-color: #2a2a3a; box-shadow: none; }
-    50% { border-color: #0f0; box-shadow: 0 0 30px #0f0, inset 0 0 30px rgba(0,255,0,0.15); }
-    100% { border-color: #2a2a3a; box-shadow: none; }
+    0% { border-color: #1a3048; box-shadow: none; }
+    50% { border-color: var(--jwx-red); box-shadow: 0 0 30px rgba(237,0,64,0.4), inset 0 0 20px rgba(237,0,64,0.1); }
+    100% { border-color: #1a3048; box-shadow: none; }
   }
 
   @keyframes shake {
@@ -351,7 +371,7 @@
 </head>
 <body>
 
-<h1>WHACK-A-LETTER</h1>
+<h1><span class="jwx">JWX</span> WHACK-A-LETTER</h1>
 
 <div id="progress"></div>
 <div id="stats">
@@ -366,7 +386,7 @@
 <div id="overlay">
   <h2 id="overlayTitle">WHACK-A-LETTER</h2>
   <div class="subtitle" id="overlaySubtitle">Click the letters in order to spell HELLO WORLD</div>
-  <button id="overlayBtn" onclick="startGame()">START</button>
+  <button id="overlayBtn" onclick="startGame()">PLAY</button>
 </div>
 
 <script>
@@ -376,7 +396,7 @@
   const HOLES_COUNT = 12;
   const LETTER_SHOW_TIME = 1200;
   const SPAWN_INTERVAL = 600;
-  const COLORS = ['#0ff', '#f0f', '#ff0', '#0f0', '#f90', '#f44', '#4af', '#af4'];
+  const COLORS = ['#ed0040', '#D01884', '#ff5c8a', '#143048', '#2a7ab5', '#5ac8fa', '#ff8a3d', '#40e0b0'];
 
   const MAX_LIVES = 3;
   let currentIndex = 0;
@@ -387,7 +407,7 @@
   let lives = MAX_LIVES;
   let score = 0;
 
-  // --- Sound FX (Web Audio API, no files needed) ---
+  // --- Sound FX ---
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   let audioCtx;
   function ensureAudio() {
@@ -423,75 +443,111 @@
 
   function playFanfare() {
     ensureAudio();
-    const notes = [523, 659, 784, 1047];
+    // Original ascending triumph — Bb major arpeggio with a 6th
+    const notes = [466, 587, 698, 932, 1175];
     notes.forEach((freq, i) => {
       const o = audioCtx.createOscillator();
       const g = audioCtx.createGain();
       o.connect(g); g.connect(audioCtx.destination);
       o.type = 'triangle';
-      const t = audioCtx.currentTime + i * 0.15;
+      const t = audioCtx.currentTime + i * 0.12;
       o.frequency.setValueAtTime(freq, t);
       g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.3, t + 0.05);
+      g.gain.linearRampToValueAtTime(0.25, t + 0.04);
       g.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
       o.start(t); o.stop(t + 0.5);
     });
+    // Shimmer chord
     const t2 = audioCtx.currentTime + 0.6;
-    [523, 659, 784, 1047].forEach(freq => {
+    [466, 587, 698, 932].forEach(freq => {
       const o = audioCtx.createOscillator();
       const g = audioCtx.createGain();
       o.connect(g); g.connect(audioCtx.destination);
       o.type = 'sine';
       o.frequency.setValueAtTime(freq, t2);
-      g.gain.setValueAtTime(0.15, t2);
-      g.gain.exponentialRampToValueAtTime(0.01, t2 + 1.0);
-      o.start(t2); o.stop(t2 + 1.0);
+      g.gain.setValueAtTime(0.12, t2);
+      g.gain.exponentialRampToValueAtTime(0.01, t2 + 1.2);
+      o.start(t2); o.stop(t2 + 1.2);
     });
   }
 
   function playLose() {
     ensureAudio();
-    const notes = [440, 370, 311, 261];
+    const notes = [370, 330, 277, 233];
     notes.forEach((freq, i) => {
       const o = audioCtx.createOscillator();
       const g = audioCtx.createGain();
       o.connect(g); g.connect(audioCtx.destination);
       o.type = 'sawtooth';
-      const t = audioCtx.currentTime + i * 0.2;
+      const t = audioCtx.currentTime + i * 0.22;
       o.frequency.setValueAtTime(freq, t);
-      g.gain.setValueAtTime(0.15, t);
+      g.gain.setValueAtTime(0.12, t);
       g.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
       o.start(t); o.stop(t + 0.4);
     });
   }
 
-  // --- Nintendo-style Background Music ---
+  // --- Original Background Music ---
+  // Bouncy, funky chiptune — Dm groove, completely original
   let bgmPlaying = false;
   let bgmTimeout = null;
 
+  // Melody: syncopated Dm pentatonic riff
   const BGM_MELODY = [
-    [659, 0.15], [659, 0.15], [0, 0.15], [659, 0.15],
-    [0, 0.15], [523, 0.15], [659, 0.15], [0, 0.15],
-    [784, 0.15], [0, 0.45], [392, 0.15], [0, 0.45],
-    [523, 0.2], [0, 0.1], [392, 0.2], [0, 0.1],
-    [330, 0.2], [0, 0.1],
-    [440, 0.15], [494, 0.15], [0, 0.1], [466, 0.15],
-    [440, 0.15], [0, 0.1],
-    [392, 0.13], [659, 0.13], [784, 0.13],
-    [880, 0.15], [0, 0.1], [698, 0.15], [784, 0.15],
-    [0, 0.1], [659, 0.15], [0, 0.1],
-    [523, 0.15], [587, 0.15], [494, 0.15],
-    [0, 0.2],
+    // Phrase 1 — bouncy opening
+    [587, 0.12], [0, 0.06], [698, 0.12], [784, 0.18],
+    [0, 0.06], [698, 0.12], [587, 0.12], [0, 0.12],
+    [523, 0.18], [0, 0.06], [466, 0.12], [523, 0.24],
+    [0, 0.18],
+    // Phrase 2 — rising answer
+    [466, 0.12], [523, 0.12], [587, 0.18], [0, 0.06],
+    [698, 0.12], [0, 0.06], [784, 0.12], [880, 0.18],
+    [0, 0.06], [784, 0.12], [698, 0.24],
+    [0, 0.18],
+    // Phrase 3 — descending funk
+    [880, 0.12], [784, 0.12], [0, 0.06], [698, 0.12],
+    [587, 0.18], [0, 0.06], [523, 0.12], [466, 0.12],
+    [523, 0.18], [587, 0.24],
+    [0, 0.24],
+    // Phrase 4 — playful ending
+    [698, 0.1], [0, 0.08], [698, 0.1], [0, 0.08],
+    [784, 0.12], [880, 0.12], [0, 0.06],
+    [784, 0.18], [698, 0.12], [587, 0.3],
+    [0, 0.3],
   ];
 
+  // Bass: pumping Dm root-fifth pattern
   const BGM_BASS = [
-    [131, 0.3], [0, 0.3], [131, 0.3], [0, 0.3],
-    [196, 0.3], [0, 0.3], [196, 0.3], [0, 0.3],
-    [165, 0.3], [0, 0.3], [131, 0.3], [0, 0.3],
-    [175, 0.3], [0, 0.3], [196, 0.3], [0, 0.3],
-    [131, 0.3], [0, 0.3], [165, 0.3], [0, 0.3],
-    [196, 0.3], [0, 0.3], [220, 0.3], [0, 0.3],
+    [147, 0.18], [0, 0.06], [147, 0.12], [220, 0.12], [0, 0.12],
+    [175, 0.18], [0, 0.06], [175, 0.12], [262, 0.12], [0, 0.12],
+    [131, 0.18], [0, 0.06], [131, 0.12], [196, 0.12], [0, 0.12],
+    [147, 0.18], [0, 0.06], [220, 0.12], [175, 0.12], [0, 0.12],
+    [131, 0.18], [0, 0.06], [131, 0.12], [196, 0.12], [0, 0.12],
+    [147, 0.18], [0, 0.06], [147, 0.12], [220, 0.12], [0, 0.12],
+    [175, 0.18], [0, 0.06], [262, 0.12], [175, 0.12], [0, 0.12],
+    [147, 0.24], [0, 0.12], [147, 0.12], [0, 0.12],
   ];
+
+  // Hi-hat percussion layer
+  function playHiHat(startT, duration) {
+    const steps = Math.floor(duration / 0.12);
+    for (let i = 0; i < steps; i++) {
+      const t = startT + i * 0.12;
+      // Use noise-like high frequency for hat sound
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      const f = audioCtx.createBiquadFilter();
+      f.type = 'highpass';
+      f.frequency.setValueAtTime(8000, t);
+      o.connect(f); f.connect(g); g.connect(audioCtx.destination);
+      o.type = 'square';
+      o.frequency.setValueAtTime(6000 + Math.random() * 2000, t);
+      const accent = (i % 4 === 0) ? 0.04 : (i % 2 === 0) ? 0.025 : 0.015;
+      g.gain.setValueAtTime(accent, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+      o.start(t); o.stop(t + 0.05);
+    }
+  }
 
   function playBGMLine(notes, type, gainVal, st) {
     let t = st;
@@ -503,7 +559,7 @@
         o.type = type;
         o.frequency.setValueAtTime(freq, t);
         g.gain.setValueAtTime(gainVal, t);
-        g.gain.setValueAtTime(gainVal, t + dur * 0.8);
+        g.gain.setValueAtTime(gainVal, t + dur * 0.75);
         g.gain.linearRampToValueAtTime(0, t + dur);
         o.start(t); o.stop(t + dur);
       }
@@ -519,8 +575,9 @@
     function loopBGM() {
       if (!bgmPlaying) return;
       const now = audioCtx.currentTime + 0.05;
-      const melodyDur = playBGMLine(BGM_MELODY, 'square', 0.08, now);
-      playBGMLine(BGM_BASS, 'triangle', 0.1, now);
+      const melodyDur = playBGMLine(BGM_MELODY, 'square', 0.06, now);
+      playBGMLine(BGM_BASS, 'triangle', 0.09, now);
+      playHiHat(now, melodyDur);
       bgmTimeout = setTimeout(loopBGM, melodyDur * 1000);
     }
     loopBGM();
@@ -545,7 +602,7 @@
     document.getElementById('score').textContent = `Score: ${score}`;
   }
 
-  // Build grid — each hole is a mini video player
+  // Build grid
   const grid = document.getElementById('grid');
   const holes = [];
   for (let i = 0; i < HOLES_COUNT; i++) {
@@ -607,7 +664,6 @@
 
   function spawnLetter() {
     if (!gameActive) return;
-
     const emptyHoles = holes.map((h, i) => ({ ...h, idx: i })).filter(h => !h.active);
     if (emptyHoles.length === 0) return;
 
@@ -623,11 +679,8 @@
     hole.letterEl.style.color = color;
     hole.letterEl.classList.remove('hide');
     hole.letterEl.classList.add('show');
-
-    // Activate player screen look
     hole.el.classList.add('active-screen');
 
-    // Animate the progress bar fill over LETTER_SHOW_TIME
     hole.fillEl.style.transition = 'none';
     hole.fillEl.style.width = '0%';
     hole.fillEl.style.background = color;
@@ -635,7 +688,6 @@
     hole.fillEl.style.transition = `width ${LETTER_SHOW_TIME}ms linear`;
     hole.fillEl.style.width = '100%';
 
-    // Countdown timer label
     let remaining = LETTER_SHOW_TIME;
     hole.timeEl.textContent = (remaining / 1000).toFixed(1);
     hole._countdownInterval = setInterval(() => {
@@ -649,9 +701,7 @@
     }, 100);
 
     clearTimeout(hole.timeout);
-    hole.timeout = setTimeout(() => {
-      hideLetter(idx);
-    }, LETTER_SHOW_TIME);
+    hole.timeout = setTimeout(() => hideLetter(idx), LETTER_SHOW_TIME);
   }
 
   function hideLetter(idx) {
@@ -688,10 +738,7 @@
       spawnParticles(hole.el);
       hideLetter(idx);
       updateProgress();
-
-      if (currentIndex >= TARGET.length) {
-        winGame();
-      }
+      if (currentIndex >= TARGET.length) winGame();
     } else {
       lives--;
       playBuzz();
@@ -703,10 +750,7 @@
       hole.el.classList.remove('wrong-hit');
       void hole.el.offsetWidth;
       hole.el.classList.add('wrong-hit');
-
-      if (lives <= 0) {
-        loseGame();
-      }
+      if (lives <= 0) loseGame();
     }
   }
 
@@ -741,11 +785,10 @@
     updateProgress();
     updateLivesDisplay();
     updateScoreDisplay();
-
     document.getElementById('overlay').classList.add('hidden');
     startBGM();
 
-    holes.forEach((h, i) => {
+    holes.forEach((h) => {
       clearTimeout(h.timeout);
       clearInterval(h._countdownInterval);
       h.active = false;
@@ -771,17 +814,17 @@
     clearInterval(spawnInterval);
     stopBGM();
     playLose();
-
     holes.forEach((h, i) => { clearTimeout(h.timeout); clearInterval(h._countdownInterval); hideLetter(i); });
 
     document.body.style.transition = 'background 0.2s';
-    document.body.style.background = '#2a0a0a';
-    setTimeout(() => { document.body.style.background = '#0a0a1a'; }, 300);
+    document.body.style.background = '#1a0a10';
+    setTimeout(() => { document.body.style.background = 'var(--jwx-dark)'; }, 300);
 
     setTimeout(() => {
-      document.getElementById('overlayTitle').textContent = 'GAME OVER';
-      document.getElementById('overlayTitle').style.color = '#f44';
-      document.getElementById('overlayTitle').style.textShadow = '0 0 30px #f44';
+      const t = document.getElementById('overlayTitle');
+      t.textContent = 'GAME OVER';
+      t.style.color = '#f44';
+      t.style.textShadow = '0 0 30px rgba(255,68,68,0.5)';
       document.getElementById('overlaySubtitle').textContent = `Score: ${score} · Got ${currentIndex}/${TARGET.length} letters`;
       document.getElementById('overlayBtn').textContent = 'TRY AGAIN';
       document.getElementById('overlay').classList.remove('hidden');
@@ -793,11 +836,8 @@
     clearInterval(timerInterval);
     clearInterval(spawnInterval);
     stopBGM();
-
     const finalTime = ((Date.now() - startTime) / 1000).toFixed(2);
-
     holes.forEach((h, i) => { clearTimeout(h.timeout); clearInterval(h._countdownInterval); hideLetter(i); });
-
     playFanfare();
 
     for (let i = 0; i < 80; i++) {
@@ -812,9 +852,10 @@
     }
 
     setTimeout(() => {
-      document.getElementById('overlayTitle').textContent = 'HELLO WORLD!';
-      document.getElementById('overlayTitle').style.color = '#0ff';
-      document.getElementById('overlayTitle').style.textShadow = '0 0 30px #0ff';
+      const t = document.getElementById('overlayTitle');
+      t.textContent = 'HELLO WORLD!';
+      t.style.color = 'var(--jwx-red)';
+      t.style.textShadow = '0 0 30px rgba(237,0,64,0.5)';
       document.getElementById('overlaySubtitle').textContent = `Score: ${score} · Completed in ${finalTime}s`;
       document.getElementById('overlayBtn').textContent = 'PLAY AGAIN';
       document.getElementById('overlay').classList.remove('hidden');
