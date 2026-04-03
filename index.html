@@ -54,11 +54,30 @@
     animation: pulse 0.6s ease-in-out infinite alternate;
   }
 
-  /* Timer */
-  #timer {
+  /* Stats row */
+  #stats {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1rem;
     font-size: 1.2rem;
     color: #888;
-    margin-bottom: 1rem;
+    align-items: center;
+  }
+
+  #lives {
+    font-size: 1.3rem;
+    letter-spacing: 4px;
+    transition: all 0.2s;
+  }
+
+  #lives.hit {
+    animation: shake 0.3s ease;
+    filter: brightness(2);
+  }
+
+  #score {
+    color: #0ff;
+    text-shadow: 0 0 8px rgba(0,255,255,0.3);
   }
 
   /* Grid */
@@ -224,7 +243,11 @@
 <h1>WHACK-A-LETTER</h1>
 
 <div id="progress"></div>
-<div id="timer">0.00s</div>
+<div id="stats">
+  <span id="timer">0.00s</span>
+  <span id="lives">❤️ ❤️ ❤️</span>
+  <span id="score">Score: 0</span>
+</div>
 
 <div id="grid"></div>
 
@@ -244,11 +267,14 @@
   const SPAWN_INTERVAL = 600;
   const COLORS = ['#0ff', '#f0f', '#ff0', '#0f0', '#f90', '#f44', '#4af', '#af4'];
 
+  const MAX_LIVES = 3;
   let currentIndex = 0;
   let startTime = 0;
   let timerInterval = null;
   let spawnInterval = null;
   let gameActive = false;
+  let lives = MAX_LIVES;
+  let score = 0;
 
   // --- Sound FX (Web Audio API, no files needed) ---
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -311,6 +337,32 @@
       g.gain.exponentialRampToValueAtTime(0.01, t2 + 1.0);
       o.start(t2); o.stop(t2 + 1.0);
     });
+  }
+
+  function playLose() {
+    ensureAudio();
+    const notes = [440, 370, 311, 261]; // A4 F#4 Eb4 C4 — descending sad
+    notes.forEach((freq, i) => {
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.connect(g); g.connect(audioCtx.destination);
+      o.type = 'sawtooth';
+      const t = audioCtx.currentTime + i * 0.2;
+      o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.15, t);
+      g.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+      o.start(t); o.stop(t + 0.4);
+    });
+  }
+
+  function updateLivesDisplay() {
+    const full = '❤️ '.repeat(lives).trim();
+    const empty = '🖤 '.repeat(MAX_LIVES - lives).trim();
+    document.getElementById('lives').textContent = (full + ' ' + empty).trim();
+  }
+
+  function updateScoreDisplay() {
+    document.getElementById('score').textContent = `Score: ${score}`;
   }
 
   // Build grid
@@ -406,7 +458,9 @@
     if (hole.letter === needed) {
       // Correct!
       currentIndex++;
+      score += 100;
       playPop();
+      updateScoreDisplay();
       hole.el.classList.remove('correct');
       void hole.el.offsetWidth;
       hole.el.classList.add('correct');
@@ -419,10 +473,20 @@
       }
     } else {
       // Wrong
+      lives--;
       playBuzz();
+      updateLivesDisplay();
+      const livesEl = document.getElementById('lives');
+      livesEl.classList.remove('hit');
+      void livesEl.offsetWidth;
+      livesEl.classList.add('hit');
       hole.el.classList.remove('wrong');
       void hole.el.offsetWidth;
       hole.el.classList.add('wrong');
+
+      if (lives <= 0) {
+        loseGame();
+      }
     }
   }
 
@@ -450,9 +514,13 @@
 
   function startGame() {
     currentIndex = 0;
+    lives = MAX_LIVES;
+    score = 0;
     gameActive = true;
     startTime = Date.now();
     updateProgress();
+    updateLivesDisplay();
+    updateScoreDisplay();
 
     document.getElementById('overlay').classList.add('hidden');
 
@@ -470,6 +538,31 @@
     }, 50);
 
     spawnInterval = setInterval(spawnLetter, SPAWN_INTERVAL);
+  }
+
+  function loseGame() {
+    gameActive = false;
+    clearInterval(timerInterval);
+    clearInterval(spawnInterval);
+
+    playLose();
+
+    // Hide all letters
+    holes.forEach((h, i) => { clearTimeout(h.timeout); hideLetter(i); });
+
+    // Screen flash red
+    document.body.style.transition = 'background 0.2s';
+    document.body.style.background = '#2a0a0a';
+    setTimeout(() => { document.body.style.background = '#0a0a1a'; }, 300);
+
+    setTimeout(() => {
+      document.getElementById('overlayTitle').textContent = 'GAME OVER';
+      document.getElementById('overlayTitle').style.color = '#f44';
+      document.getElementById('overlayTitle').style.textShadow = '0 0 30px #f44';
+      document.getElementById('overlaySubtitle').textContent = `Score: ${score} · Got ${currentIndex}/${TARGET.length} letters`;
+      document.getElementById('overlayBtn').textContent = 'TRY AGAIN';
+      document.getElementById('overlay').classList.remove('hidden');
+    }, 800);
   }
 
   function winGame() {
@@ -500,7 +593,9 @@
     // Show win screen after a beat
     setTimeout(() => {
       document.getElementById('overlayTitle').textContent = 'HELLO WORLD!';
-      document.getElementById('overlaySubtitle').textContent = `Completed in ${finalTime}s`;
+      document.getElementById('overlayTitle').style.color = '#0ff';
+      document.getElementById('overlayTitle').style.textShadow = '0 0 30px #0ff';
+      document.getElementById('overlaySubtitle').textContent = `Score: ${score} · Completed in ${finalTime}s`;
       document.getElementById('overlayBtn').textContent = 'PLAY AGAIN';
       document.getElementById('overlay').classList.remove('hidden');
     }, 1200);
