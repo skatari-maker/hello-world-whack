@@ -586,107 +586,98 @@
     });
   }
 
-  // --- Original Background Music ---
-  // Bouncy, funky chiptune — Dm groove, completely original
+  // --- Background Music ---
+  // Bright, happy, kawaii 8-bit chiptune ~137 BPM in C major
+  // Inspired by the cheerful bleeps-and-bloops style of Kawaii Kitsune
   let bgmPlaying = false;
   let bgmTimeout = null;
+  const B = 0.11; // ~137 BPM eighth note
 
-  // Melody: ~20s loop with 8 distinct phrases in Dm
+  // Melody: ~24s bright kawaii loop — staccato, playful, major key
   const BGM_MELODY = [
-    // === Section A — bouncy opening ===
-    [587, 0.12], [0, 0.06], [698, 0.12], [784, 0.18],
-    [0, 0.06], [698, 0.12], [587, 0.12], [0, 0.12],
-    [523, 0.18], [0, 0.06], [466, 0.12], [523, 0.24],
-    [0, 0.18],
-    // A2 — answer phrase
-    [466, 0.12], [523, 0.12], [587, 0.18], [0, 0.06],
-    [698, 0.12], [0, 0.06], [784, 0.12], [880, 0.18],
-    [0, 0.06], [784, 0.12], [698, 0.24],
-    [0, 0.24],
+    // === A: Cheerful bouncy opener (C major) ===
+    [784, B], [0, B*0.5], [784, B*0.5], [880, B], [784, B], [659, B],
+    [523, B*1.5], [0, B*0.5], [659, B], [784, B],
+    [0, B],
+    // A2: Answering phrase
+    [880, B], [0, B*0.5], [880, B*0.5], [988, B], [880, B], [784, B],
+    [659, B*2], [0, B],
+    [523, B], [659, B], [784, B], [659, B*0.5], [523, B*0.5],
+    [0, B],
 
-    // === Section B — chill middle ===
-    [440, 0.24], [0, 0.06], [523, 0.18], [587, 0.12],
-    [0, 0.12], [523, 0.18], [466, 0.24],
-    [0, 0.18],
-    // B2 — melodic climb
-    [392, 0.12], [440, 0.12], [523, 0.12], [587, 0.18],
-    [0, 0.06], [698, 0.24], [0, 0.06],
-    [587, 0.12], [523, 0.18], [466, 0.12],
-    [0, 0.24],
+    // === B: Sparkly middle (F major / Am) ===
+    [1047, B*0.5], [988, B*0.5], [880, B], [0, B*0.5],
+    [784, B*0.5], [659, B], [784, B],
+    [880, B*1.5], [0, B*0.5],
+    [784, B*0.5], [659, B*0.5], [523, B], [659, B*1.5],
+    [0, B],
+    // B2: Twinkling descent
+    [1047, B*0.5], [0, B*0.25], [1047, B*0.25], [988, B*0.5], [880, B*0.5],
+    [784, B], [659, B], [523, B],
+    [440, B], [523, B*1.5],
+    [0, B*1.5],
 
-    // === Section C — high energy ===
-    [880, 0.12], [0, 0.06], [784, 0.12], [698, 0.12],
-    [0, 0.06], [784, 0.18], [880, 0.12], [1047, 0.18],
-    [0, 0.06], [880, 0.12], [784, 0.24],
-    [0, 0.18],
-    // C2 — call and response
-    [698, 0.12], [784, 0.12], [0, 0.12],
-    [587, 0.12], [698, 0.12], [0, 0.12],
-    [523, 0.12], [587, 0.18], [0, 0.06],
-    [698, 0.24], [784, 0.18],
-    [0, 0.24],
+    // === C: Bright buildup (G major) ===
+    [588, B], [784, B], [988, B], [784, B],
+    [880, B*0.5], [988, B*0.5], [1047, B], [0, B*0.5],
+    [988, B*0.5], [880, B], [784, B],
+    [659, B*1.5], [0, B*0.5],
+    // C2: Playful staccato burst
+    [1047, B*0.5], [0, B*0.25], [988, B*0.5], [0, B*0.25],
+    [880, B*0.5], [0, B*0.25], [784, B*0.5], [0, B*0.25],
+    [880, B], [988, B], [1047, B*1.5],
+    [0, B],
 
-    // === Section D — resolving outro ===
-    [880, 0.18], [784, 0.12], [0, 0.06], [698, 0.18],
-    [587, 0.24], [0, 0.12],
-    [523, 0.12], [466, 0.12], [440, 0.18],
-    [466, 0.12], [523, 0.24],
-    [0, 0.18],
-    // D2 — playful ending tag
-    [698, 0.1], [0, 0.08], [698, 0.1], [0, 0.08],
-    [784, 0.12], [880, 0.12], [0, 0.06],
-    [784, 0.18], [698, 0.12], [587, 0.36],
-    [0, 0.48],
+    // === D: Happy resolution ===
+    [784, B], [0, B*0.5], [659, B*0.5], [784, B], [880, B],
+    [1047, B*1.5], [0, B*0.5],
+    [988, B], [880, B], [784, B],
+    [659, B*1.5], [0, B*0.5],
+    // D2: Cute ending tag
+    [523, B*0.5], [0, B*0.25], [523, B*0.5], [0, B*0.25],
+    [659, B], [784, B],
+    [880, B*0.5], [784, B*0.5], [659, B],
+    [523, B*2],
+    [0, B*3],
   ];
 
-  // Bass: 20s pumping pattern with chord changes
+  // Bass: bouncy staccato 8th note pattern
   const BGM_BASS = [
-    // Dm
-    [147, 0.18], [0, 0.06], [147, 0.12], [220, 0.12], [0, 0.12],
-    [147, 0.18], [0, 0.06], [220, 0.12], [147, 0.12], [0, 0.12],
-    // F
-    [175, 0.18], [0, 0.06], [175, 0.12], [262, 0.12], [0, 0.12],
-    [175, 0.18], [0, 0.06], [262, 0.12], [175, 0.12], [0, 0.12],
     // C
-    [131, 0.18], [0, 0.06], [131, 0.12], [196, 0.12], [0, 0.12],
-    [131, 0.18], [0, 0.06], [196, 0.12], [131, 0.12], [0, 0.12],
-    // Bb
-    [117, 0.18], [0, 0.06], [117, 0.12], [175, 0.12], [0, 0.12],
-    [117, 0.18], [0, 0.06], [175, 0.12], [117, 0.12], [0, 0.12],
-    // Dm — section C energy
-    [147, 0.18], [0, 0.06], [147, 0.12], [220, 0.12], [0, 0.12],
-    [147, 0.12], [0, 0.06], [220, 0.12], [147, 0.12], [175, 0.06], [0, 0.06],
-    // Gm
-    [196, 0.18], [0, 0.06], [196, 0.12], [294, 0.12], [0, 0.12],
-    [196, 0.18], [0, 0.06], [294, 0.12], [196, 0.12], [0, 0.12],
-    // A resolve
-    [220, 0.18], [0, 0.06], [220, 0.12], [330, 0.12], [0, 0.12],
-    [220, 0.18], [0, 0.06], [330, 0.12], [220, 0.12], [0, 0.12],
-    // Dm final
-    [147, 0.18], [0, 0.06], [147, 0.12], [220, 0.12], [0, 0.12],
-    [147, 0.24], [0, 0.12], [220, 0.24], [0, 0.48],
+    [131, B], [0, B*0.5], [196, B*0.5], [131, B], [0, B*0.5], [196, B*0.5],
+    [131, B], [196, B], [131, B], [0, B],
+    // G
+    [196, B], [0, B*0.5], [294, B*0.5], [196, B], [0, B*0.5], [294, B*0.5],
+    [196, B], [294, B], [196, B], [0, B],
+    // Am
+    [220, B], [0, B*0.5], [330, B*0.5], [220, B], [0, B*0.5], [330, B*0.5],
+    [220, B], [330, B], [220, B], [0, B],
+    // F
+    [175, B], [0, B*0.5], [262, B*0.5], [175, B], [0, B*0.5], [262, B*0.5],
+    [175, B], [262, B], [175, B], [0, B],
+    // C
+    [131, B], [0, B*0.5], [196, B*0.5], [131, B], [196, B],
+    [131, B], [0, B*0.5], [196, B*0.5], [262, B], [196, B],
+    // G
+    [196, B], [0, B*0.5], [294, B*0.5], [196, B], [294, B],
+    [196, B], [0, B*0.5], [294, B*0.5], [196, B], [0, B],
+    // F -> G -> C
+    [175, B], [175, B], [196, B], [196, B],
+    [262, B], [196, B], [131, B], [196, B],
+    [131, B*2], [0, B*3],
   ];
 
-  // Hi-hat percussion layer
-  function playHiHat(startT, duration) {
-    const steps = Math.floor(duration / 0.12);
-    for (let i = 0; i < steps; i++) {
-      const t = startT + i * 0.12;
-      // Use noise-like high frequency for hat sound
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      const f = audioCtx.createBiquadFilter();
-      f.type = 'highpass';
-      f.frequency.setValueAtTime(8000, t);
-      o.connect(f); f.connect(g); g.connect(audioCtx.destination);
-      o.type = 'square';
-      o.frequency.setValueAtTime(6000 + Math.random() * 2000, t);
-      const accent = (i % 4 === 0) ? 0.04 : (i % 2 === 0) ? 0.025 : 0.015;
-      g.gain.setValueAtTime(accent, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-      o.start(t); o.stop(t + 0.05);
-    }
-  }
+  // Chirpy arp layer — adds sparkle
+  const BGM_ARP = [
+    [1047, B*0.25], [1319, B*0.25], [1568, B*0.25], [1319, B*0.25],
+    [1047, B*0.25], [1319, B*0.25], [1568, B*0.25], [0, B*0.25],
+    [988, B*0.25], [1175, B*0.25], [1480, B*0.25], [1175, B*0.25],
+    [988, B*0.25], [1175, B*0.25], [1480, B*0.25], [0, B*0.25],
+    [880, B*0.25], [1047, B*0.25], [1319, B*0.25], [1047, B*0.25],
+    [880, B*0.25], [1047, B*0.25], [1319, B*0.25], [0, B*0.25],
+    [698, B*0.25], [880, B*0.25], [1047, B*0.25], [880, B*0.25],
+    [698, B*0.25], [880, B*0.25], [1047, B*0.25], [0, B*0.25],
+  ];
 
   function playBGMLine(notes, type, gainVal, st) {
     let t = st;
@@ -698,13 +689,23 @@
         o.type = type;
         o.frequency.setValueAtTime(freq, t);
         g.gain.setValueAtTime(gainVal, t);
-        g.gain.setValueAtTime(gainVal, t + dur * 0.75);
-        g.gain.linearRampToValueAtTime(0, t + dur);
+        g.gain.setValueAtTime(gainVal, t + dur * 0.7);
+        g.gain.linearRampToValueAtTime(0, t + dur * 0.95);
         o.start(t); o.stop(t + dur);
       }
       t += dur;
     });
     return t - st;
+  }
+
+  // Repeat arp pattern to fill the melody duration
+  function playArpLayer(startT, totalDur) {
+    const arpDur = BGM_ARP.reduce((s, [, d]) => s + d, 0);
+    let t = startT;
+    while (t - startT < totalDur - 0.1) {
+      playBGMLine(BGM_ARP, 'sine', 0.04, t);
+      t += arpDur;
+    }
   }
 
   function startBGM() {
@@ -714,9 +715,9 @@
     function loopBGM() {
       if (!bgmPlaying) return;
       const now = audioCtx.currentTime + 0.05;
-      const melodyDur = playBGMLine(BGM_MELODY, 'square', 0.12, now);
-      playBGMLine(BGM_BASS, 'triangle', 0.14, now);
-      playHiHat(now, melodyDur);
+      const melodyDur = playBGMLine(BGM_MELODY, 'square', 0.10, now);
+      playBGMLine(BGM_BASS, 'triangle', 0.12, now);
+      playArpLayer(now, melodyDur);
       bgmTimeout = setTimeout(loopBGM, melodyDur * 1000);
     }
     loopBGM();
