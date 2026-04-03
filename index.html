@@ -264,22 +264,77 @@
   #overlay {
     position: fixed;
     inset: 0;
-    background: rgba(11, 26, 40, 0.96);
+    background: var(--jwx-dark);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 100;
+    overflow: hidden;
   }
 
   #overlay.hidden { display: none; }
 
+  #overlay .attract-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  #overlay .attract-letter {
+    position: absolute;
+    font-size: 2rem;
+    font-weight: 800;
+    pointer-events: none;
+    animation: floatLetter linear infinite;
+  }
+
+  #overlay .attract-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
   #overlay h2 {
-    font-size: 2.5rem;
+    font-size: 3.2rem;
     font-weight: 900;
     color: var(--jwx-red);
-    margin-bottom: 1rem;
-    letter-spacing: 3px;
+    margin-bottom: 0.3rem;
+    letter-spacing: 5px;
+    animation: titleBounce 2s ease-in-out infinite;
+  }
+
+  #overlay .title-sub {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 8px;
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+  }
+
+  #overlay .high-score {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--jwx-red);
+    margin-bottom: 0.4rem;
+    animation: flashText 1.2s ease-in-out infinite;
+  }
+
+  #overlay .instructions {
+    font-size: 0.85rem;
+    color: #3a5a70;
+    margin-bottom: 2rem;
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  #overlay .instructions span {
+    color: #5a8aa0;
   }
 
   #overlay .subtitle {
@@ -292,10 +347,10 @@
   }
 
   #overlay button {
-    padding: 14px 40px;
-    font-size: 1.1rem;
+    padding: 16px 48px;
+    font-size: 1.2rem;
     font-family: 'Space Grotesk', sans-serif;
-    font-weight: 700;
+    font-weight: 800;
     background: var(--jwx-red);
     color: #fff;
     border: none;
@@ -303,13 +358,44 @@
     cursor: pointer;
     transition: all 0.2s;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 4px;
+    animation: btnPulse 1.5s ease-in-out infinite;
   }
 
   #overlay button:hover {
     background: #ff1a5c;
-    box-shadow: 0 0 30px rgba(237, 0, 64, 0.4);
-    transform: translateY(-1px);
+    box-shadow: 0 0 40px rgba(237, 0, 64, 0.5);
+    transform: translateY(-2px) scale(1.05);
+    animation: none;
+  }
+
+  #overlay .credits {
+    margin-top: 2rem;
+    font-size: 0.7rem;
+    color: #1e3040;
+    letter-spacing: 2px;
+  }
+
+  @keyframes titleBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  @keyframes flashText {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @keyframes btnPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(237,0,64,0.4); }
+    50% { box-shadow: 0 0 20px 8px rgba(237,0,64,0.2); }
+  }
+
+  @keyframes floatLetter {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
   }
 
   /* Confetti */
@@ -383,11 +469,23 @@
 
 <div id="grid"></div>
 
-<!-- Start screen -->
+<!-- Attract / Win / Lose screen -->
 <div id="overlay">
-  <h2 id="overlayTitle">WHACK-A-LETTER</h2>
-  <div class="subtitle" id="overlaySubtitle">Click the letters in order to spell HELLO WORLD</div>
-  <button id="overlayBtn" onclick="startGame()">PLAY</button>
+  <div class="attract-bg" id="attractBg"></div>
+  <div class="attract-content" id="attractContent">
+    <h2 id="overlayTitle">WHACK-A-LETTER</h2>
+    <div class="title-sub" id="titleSub">JWX</div>
+    <div class="high-score" id="highScoreDisplay">HIGH SCORE: 0</div>
+    <div class="instructions" id="overlayInstructions">
+      <span>H</span> <span>E</span> <span>L</span> <span>L</span> <span>O</span>
+      &nbsp;&nbsp;
+      <span>W</span> <span>O</span> <span>R</span> <span>L</span> <span>D</span>
+      <br>Click the letters in order — 3 lives — don't miss!
+    </div>
+    <div class="subtitle" id="overlaySubtitle"></div>
+    <button id="overlayBtn" onclick="startGame()">START</button>
+    <div class="credits">BUILT WITH CLAUDE CODE</div>
+  </div>
 </div>
 
 <script>
@@ -862,13 +960,8 @@
     setTimeout(() => { document.body.style.background = 'var(--jwx-dark)'; }, 300);
 
     setTimeout(() => {
-      const t = document.getElementById('overlayTitle');
-      t.textContent = 'GAME OVER';
-      t.style.color = '#f44';
-      t.style.textShadow = '0 0 30px rgba(255,68,68,0.5)';
-      document.getElementById('overlaySubtitle').textContent = `Score: ${score} · Got ${currentIndex}/${TARGET.length} letters`;
-      document.getElementById('overlayBtn').textContent = 'TRY AGAIN';
-      document.getElementById('overlay').classList.remove('hidden');
+      updateHighScore();
+      showOverlay('GAME OVER', '#f44', `Score: ${score} · Got ${currentIndex}/${TARGET.length} letters`, 'TRY AGAIN', false);
     }, 800);
   }
 
@@ -893,19 +986,70 @@
     }
 
     setTimeout(() => {
-      const t = document.getElementById('overlayTitle');
-      t.textContent = 'HELLO WORLD!';
-      t.style.color = 'var(--jwx-red)';
-      t.style.textShadow = '0 0 30px rgba(237,0,64,0.5)';
-      document.getElementById('overlaySubtitle').textContent = `Score: ${score} · Completed in ${finalTime}s`;
-      document.getElementById('overlayBtn').textContent = 'PLAY AGAIN';
-      document.getElementById('overlay').classList.remove('hidden');
+      updateHighScore();
+      showOverlay('HELLO WORLD!', 'var(--jwx-red)', `Score: ${score} · Completed in ${finalTime}s`, 'PLAY AGAIN', false);
     }, 1200);
+  }
+
+  // --- Attract Mode ---
+  let highScore = parseInt(localStorage.getItem('jwx-whack-highscore') || '0');
+  let attractInterval = null;
+
+  function updateHighScore() {
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem('jwx-whack-highscore', highScore);
+    }
+    document.getElementById('highScoreDisplay').textContent = `HIGH SCORE: ${highScore}`;
+  }
+
+  function startAttractMode() {
+    updateHighScore();
+    const bg = document.getElementById('attractBg');
+    bg.innerHTML = '';
+    // Spawn floating letters continuously
+    attractInterval = setInterval(() => {
+      if (document.getElementById('overlay').classList.contains('hidden')) {
+        clearInterval(attractInterval);
+        return;
+      }
+      const letter = ALL_LETTERS[Math.floor(Math.random() * ALL_LETTERS.length)];
+      const el = document.createElement('span');
+      el.className = 'attract-letter';
+      el.textContent = letter;
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      const left = Math.random() * 100;
+      const dur = 4 + Math.random() * 6;
+      const size = 1.2 + Math.random() * 2;
+      el.style.cssText = `left:${left}%;color:${color};font-size:${size}rem;animation-duration:${dur}s;`;
+      bg.appendChild(el);
+      setTimeout(() => el.remove(), dur * 1000);
+    }, 300);
+  }
+
+  function showOverlay(title, titleColor, subtitle, btnText, showAttract) {
+    const t = document.getElementById('overlayTitle');
+    t.textContent = title;
+    t.style.color = titleColor;
+    t.style.textShadow = titleColor === '#f44' ? '0 0 30px rgba(255,68,68,0.5)' : '';
+    t.style.animation = showAttract ? 'titleBounce 2s ease-in-out infinite' : 'none';
+
+    document.getElementById('titleSub').style.display = showAttract ? '' : 'none';
+    document.getElementById('highScoreDisplay').style.display = showAttract ? '' : 'none';
+    document.getElementById('overlayInstructions').style.display = showAttract ? '' : 'none';
+    document.getElementById('overlaySubtitle').textContent = subtitle || '';
+    document.getElementById('overlaySubtitle').style.display = subtitle ? '' : 'none';
+    document.getElementById('overlayBtn').textContent = btnText;
+    document.querySelector('.credits').style.display = showAttract ? '' : 'none';
+
+    document.getElementById('overlay').classList.remove('hidden');
+    if (showAttract) startAttractMode();
   }
 
   // Initial state
   updateProgress();
   updateLivesDisplay();
+  startAttractMode();
 </script>
 
 </body>
